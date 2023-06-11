@@ -3,21 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[RequireComponent(typeof(VolumeChanger))]
 public class AlarmTrigger : MonoBehaviour
 {
-    private VolumeChanger _changer;
+    [SerializeField] private UnityEvent _enterTrigger;
+    [SerializeField] private UnityEvent _exitTrigger;
 
-    private void Awake()
+    public event UnityAction EnterTrigger
     {
-        _changer = GetComponent<VolumeChanger>();
+        add => _enterTrigger.AddListener(value);
+        remove => _enterTrigger.RemoveListener(value);
+    }
+
+    public event UnityAction ExitTrigger
+    {
+        add => _exitTrigger.AddListener(value);
+        remove => _exitTrigger.RemoveListener(value);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.TryGetComponent<Player>(out Player player))
         {
-            _changer.ChangeVolume(true);
+            _enterTrigger?.Invoke();
         }
     }
 
@@ -25,7 +32,7 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent<Player>(out Player player))
         {
-            _changer.ChangeVolume(false);
+            _exitTrigger?.Invoke();
         }
     }
 }

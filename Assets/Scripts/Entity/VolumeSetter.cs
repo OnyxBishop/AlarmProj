@@ -8,50 +8,51 @@ using UnityEngine.Events;
 public class VolumeSetter : MonoBehaviour
 {
     [SerializeField] private AudioSource _audioSource;
+
     private Coroutine _fadeCoroutine;
+
     private AlarmTrigger _alarmTrigger;
+
+    private bool _isPlaying = false;
 
     private float _maxVolume = 0.5f;
     private float _zeroVolume = 0f;
     private float _fadeTime = 10f;
 
-    private void OnEnable()
+    private void Awake()
     {
         _alarmTrigger = GetComponent<AlarmTrigger>();
-        _alarmTrigger.EnterTrigger += OnTriggerEnterChangeVolume;
-        _alarmTrigger.ExitTrigger -= OnTriggerExitChangeVolume;
+    }
+
+    private void OnEnable()
+    {
+        _alarmTrigger.Reached += OnChangeVolume;
     }
 
     private void OnDisable()
     {
-        _alarmTrigger.EnterTrigger -= OnTriggerEnterChangeVolume;
-        _alarmTrigger.ExitTrigger += OnTriggerExitChangeVolume;
+        _alarmTrigger.Reached -= OnChangeVolume;
     }
 
-    public void OnTriggerEnterChangeVolume()
+    private void OnChangeVolume()
     {
         if (_fadeCoroutine != null)
             StopCoroutine(_fadeCoroutine);
 
-        _audioSource.Play();
-
-        _fadeCoroutine = StartCoroutine(Fade(true));
-
-    }
-
-    public void OnTriggerExitChangeVolume()
-    {
-        if(_fadeCoroutine != null)
-            StopCoroutine(_fadeCoroutine);
-
-        _fadeCoroutine = StartCoroutine(Fade(false));
-    }
+        _fadeCoroutine = StartCoroutine(Fade(_alarmTrigger.IsStartPlaying));
+    }   
 
     private IEnumerator Fade(bool isFade)
     {
         float elapsedTime = 0f;
         float currentVolume = _audioSource.volume;
         float targetVolume = isFade == true ? _maxVolume : _zeroVolume;
+
+        if (_isPlaying == false)
+        {
+            _audioSource.Play();
+            _isPlaying = true;
+        }
 
         while (elapsedTime < _fadeTime)
         {
@@ -61,9 +62,10 @@ public class VolumeSetter : MonoBehaviour
             yield return null;
         }
 
-        if (isFade == false)
+        if (_isPlaying == true)
         {
             _audioSource.Stop();
+            _isPlaying = false;
         }
 
         _audioSource.volume = targetVolume;

@@ -5,26 +5,22 @@ using UnityEngine.Events;
 
 public class AlarmTrigger : MonoBehaviour
 {
-    [SerializeField] private UnityEvent _enterTrigger;
-    [SerializeField] private UnityEvent _exitTrigger;
+    [SerializeField] private UnityEvent _reached;
 
-    public event UnityAction EnterTrigger
-    {
-        add => _enterTrigger.AddListener(value);
-        remove => _enterTrigger.RemoveListener(value);
-    }
+    public bool IsStartPlaying { get; private set; }
 
-    public event UnityAction ExitTrigger
+    public event UnityAction Reached
     {
-        add => _exitTrigger.AddListener(value);
-        remove => _exitTrigger.RemoveListener(value);
+        add => _reached.AddListener(value);
+        remove => _reached.RemoveListener(value);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.TryGetComponent<Player>(out Player player))
         {
-            _enterTrigger?.Invoke();
+            IsStartPlaying = true;
+            _reached?.Invoke();
         }
     }
 
@@ -32,7 +28,8 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent<Player>(out Player player))
         {
-            _exitTrigger?.Invoke();
+            IsStartPlaying = false;
+            _reached.Invoke();
         }
     }
 }
